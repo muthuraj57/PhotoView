@@ -1,5 +1,6 @@
 apply plugin: 'com.android.library'
-apply plugin: 'maven-publish'
+apply plugin: 'maven'
+apply plugin: 'signing'
 
 android {
     compileSdkVersion rootProject.ext.sdkVersion
@@ -16,64 +17,74 @@ dependencies {
     implementation "androidx.appcompat:appcompat:1.1.0"
 }
 
-afterEvaluate {
-    publishing {
-        publications {
-            release(MavenPublication) {
-                from components.release
+def getRepositoryUsername() {
+    return hasProperty('NEXUS_USERNAME') ? NEXUS_USERNAME : ""
+}
 
-                group = 'com.github.chrisbanes'
-                artifactId = 'PhotoView'
-                version = '2.3.0'
+def getRepositoryPassword() {
+    return hasProperty('NEXUS_PASSWORD') ? NEXUS_PASSWORD : ""
+}
 
-                // Adds javadocs and sources as separate jars.
-                artifact androidJavadocsJar
-                artifact(sourceJar)
 
-                pom {
-                    name = 'PhotoView'
-                    description = 'A simple ImageView that support zooming, both by Multi-touch gestures and double-tap.'
-                    url = 'https://github.com/Baseflow/PhotoView'
+afterEvaluate { project ->
+    uploadArchives {
+        repositories {
+            mavenDeployer {
+                beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+                repository(url: "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                    authentication(userName: getRepositoryUsername(), password: getRepositoryPassword())
+                }
+
+                snapshotRepository(url: "https://s01.oss.sonatype.org/content/repositories/snapshots/") {
+                    authentication(userName: getRepositoryUsername(), password: getRepositoryPassword())
+                }
+
+                pom.groupId = GROUP
+                pom.artifactId = POM_ARTIFACT_ID
+                pom.version = VERSION
+
+                pom.project {
+                    name 'PhotoView'
+                    packaging 'aar'
+                    // optionally artifactId can be defined here
+                    description 'mplementation of ImageView for Android that supports zooming, by various touch gestures.'
+                    url 'https://github.com/muthuraj57/PhotoView'
+
+                    scm {
+                        url 'https://github.com/muthuraj57/PhotoView'
+                        connection 'scm:git:https://github.com/muthuraj57/PhotoView.git'
+                        developerConnection 'scm:git:git@github.com:muthuraj57/PhotoView'
+                    }
+
                     licenses {
                         license {
-                            name = 'The Apache License, Version 2.0'
-                            url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                            name 'The Apache License, Version 2.0'
+                            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
                         }
                     }
+
                     developers {
                         developer {
-                            id = 'chrisbanes'
-                            name = 'Chris Banes'
+                            id 'muthuraj57'
+                            name 'Muthuraj'
                         }
-                    }
-                    scm {
-                        connection = 'scm:git@github.com/chrisbanes/PhotoView.git'
-                        developerConnection = 'scm:git@github.com/chrisbanes/PhotoView.git'
-                        url = 'https://github.com/chrisbanes/PhotoView'
                     }
                 }
             }
         }
     }
-}
 
-task androidJavadocs(type: Javadoc) {
-    source = android.sourceSets.main.java.srcDirs
-    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-    android.libraryVariants.all { variant ->
-        if (variant.name == 'release') {
-            owner.classpath += variant.javaCompileProvider.get().classpath
-        }
+    signing {
+        sign configurations.archives
     }
-    exclude '**/R.html', '**/R.*.html', '**/index.html'
-}
 
-task androidJavadocsJar(type: Jar, dependsOn: androidJavadocs) {
-    archiveClassifier.set('javadoc')
-    from androidJavadocs.destinationDir
-}
+    task sourcesJar(type: Jar) {
+        classifier = 'sources'
+        from android.sourceSets.getByName("main").java.srcDirs
+    }
 
-task sourceJar(type: Jar) {
-    from android.sourceSets.main.java.srcDirs
-    classifier "sources"
+    artifacts {
+        archives sourcesJar
+    }
 }
