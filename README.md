@@ -1,6 +1,8 @@
 # PhotoView
 PhotoView aims to help produce an easily usable implementation of a zooming Android ImageView.
 
+This is fork to publish this in `mavenCentral` since the original version is published only via `jitpack`.
+
 [![](https://jitpack.io/v/chrisbanes/PhotoView.svg)](https://jitpack.io/#chrisbanes/PhotoView)
 
 [![](https://user-images.githubusercontent.com/12352397/85141529-94648e80-b24f-11ea-9a14-a845fb43b181.gif)
@@ -12,13 +14,13 @@ Add this in your root `build.gradle` file (**not** your module `build.gradle` fi
 ```gradle
 allprojects {
     repositories {
-        maven { url "https://www.jitpack.io" }
+        mavenCentral()
     }
 }
 
 buildscript {
     repositories {
-        maven { url "https://www.jitpack.io" }
+        mavenCentral()
     }	
 }
 ```
@@ -26,7 +28,7 @@ buildscript {
 Then, add the library to your module `build.gradle`
 ```gradle
 dependencies {
-    implementation 'com.github.chrisbanes:PhotoView:latest.release.here'
+    implementation 'io.github.muthuraj57:PhotoView:1.0.0'
 }
 ```
 
